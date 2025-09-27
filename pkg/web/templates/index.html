@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{.Title}}</title>
+  <link rel="stylesheet" href="/static/mui.min.css">
+  <style>
+    body { padding: 16px; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    textarea { width: 100%; height: 65vh; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 13px; }
+    .footer { display: flex; gap: 8px; align-items: center; justify-content: space-between; margin-top: 12px; }
+    .toast { position: fixed; right: 16px; bottom: 16px; background: #1b5e20; color: white; padding: 10px 14px; border-radius: 4px; display: none; }
+    .error { background: #b71c1c; }
+    .actions { display: flex; gap: 8px; }
+    .meta { color: #666; }
+  </style>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Buildfile.yaml Editor</h1>
+    <p class="meta">Use the interactive sections below to edit your Buildfile, or open the raw YAML editor at the bottom.</p>
+
+    <div class="tabs" style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap">
+      <button class="mui-btn mui-btn--primary" hx-get="/api/sections/repos" hx-target="#section" hx-swap="innerHTML">Helm Repos</button>
+      <button class="mui-btn" hx-get="/api/sections/charts" hx-target="#section" hx-swap="innerHTML">Helm Charts</button>
+      <button class="mui-btn" hx-get="/api/sections/manifests" hx-target="#section" hx-swap="innerHTML">Manifests</button>
+      <button class="mui-btn" hx-get="/api/sections/scripts" hx-target="#section" hx-swap="innerHTML">Scripts</button>
+      <button class="mui-btn" hx-get="/api/sections/gitrepos" hx-target="#section" hx-swap="innerHTML">Git Repos</button>
+    </div>
+
+    <div id="section" hx-get="/api/sections/repos" hx-trigger="load" hx-target="#section" hx-swap="innerHTML">
+      <!-- section content will load here -->
+    </div>
+
+    <hr style="margin:20px 0"/>
+
+    <details>
+      <summary style="cursor:pointer">Raw YAML editor</summary>
+      <p class="meta">Press Save to write changes to Buildfile.yaml in this directory.</p>
+      <form id="editor-form" hx-post="/api/buildfile" hx-target="#save-status" hx-swap="outerHTML">
+        <textarea id="content" name="content" placeholder="# YAML here will be loaded momentarily..." hx-get="/api/buildfile" hx-trigger="revealed" hx-target="#content" hx-swap="outerHTML">
+        </textarea>
+        <div class="footer">
+          <div id="save-status" class="meta">Ready.</div>
+          <div class="actions">
+            <button class="mui-btn mui-btn--primary" type="submit">Save</button>
+            <button class="mui-btn" type="button" onclick="location.reload()">Reload</button>
+          </div>
+        </div>
+      </form>
+    </details>
+  </div>
+
+  <div id="toast" class="toast">Saved!</div>
+
+  <script>
+    document.body.addEventListener('saved', function() {
+      const t = document.getElementById('toast');
+      t.textContent = 'Saved!';
+      t.classList.remove('error');
+      t.style.display = 'block';
+      setTimeout(() => { t.style.display = 'none'; }, 1600);
+    });
+
+    document.addEventListener('htmx:responseError', function(evt) {
+      const t = document.getElementById('toast');
+      t.textContent = 'Save failed: ' + (evt.detail.xhr && evt.detail.xhr.responseText ? evt.detail.xhr.responseText : 'Unknown error');
+      t.classList.add('error');
+      t.style.display = 'block';
+      setTimeout(() => { t.style.display = 'none'; }, 3000);
+    });
+  </script>
+</body>
+</html>

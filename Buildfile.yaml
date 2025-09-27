@@ -12,5 +12,7 @@ k8s_manifests:
     - test
 startup_scripts:
     - test3
+    - test4
+    - test5
 git_repos:
     sample: https://github.com/example/sample.git

@@ -1,0 +1,142 @@
+{{/* Shared section partials for interactive editor */}}
+
+{{define "repos"}}
+<div id="section-content">
+  <h2>Helm Repos</h2>
+  <table class="mui-table">
+    <thead><tr><th>Name</th><th>URL</th><th></th></tr></thead>
+    <tbody>
+      {{- if .Items}}
+        {{- range .Items}}
+        <tr>
+          <td>{{.Key}}</td>
+          <td><a href="{{.Value}}" target="_blank" rel="noreferrer noopener">{{.Value}}</a></td>
+          <td>
+            <button class="mui-btn" hx-post="/api/sections/repos/del" hx-vals='{"key":"{{.Key}}"}' hx-target="#section-content" hx-swap="outerHTML">Delete</button>
+          </td>
+        </tr>
+        {{- end}}
+      {{- else}}
+        <tr><td colspan="3" class="meta">No repositories yet.</td></tr>
+      {{- end}}
+    </tbody>
+  </table>
+  <form class="mui-form" hx-post="/api/sections/repos/add" hx-target="#section-content" hx-swap="outerHTML">
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+      <input name="name" placeholder="name" required />
+      <input name="url" placeholder="https://repo.example/charts" required style="min-width:320px" />
+      <button class="mui-btn mui-btn--primary" type="submit">Add</button>
+    </div>
+  </form>
+</div>
+{{end}}
+
+{{define "charts"}}
+<div id="section-content">
+  <h2>Helm Charts</h2>
+  <table class="mui-table">
+    <thead><tr><th>Release</th><th>Chart</th><th></th></tr></thead>
+    <tbody>
+      {{- if .Items}}
+        {{- range .Items}}
+        <tr>
+          <td>{{.Key}}</td>
+          <td>{{.Value}}</td>
+          <td>
+            <button class="mui-btn" hx-post="/api/sections/charts/del" hx-vals='{"key":"{{.Key}}"}' hx-target="#section-content" hx-swap="outerHTML">Delete</button>
+          </td>
+        </tr>
+        {{- end}}
+      {{- else}}
+        <tr><td colspan="3" class="meta">No charts yet.</td></tr>
+      {{- end}}
+    </tbody>
+  </table>
+  <form class="mui-form" hx-post="/api/sections/charts/add" hx-target="#section-content" hx-swap="outerHTML">
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+      <input name="release" placeholder="release-name" required />
+      <input name="chart" placeholder="repo/chart" required />
+      <button class="mui-btn mui-btn--primary" type="submit">Add</button>
+    </div>
+  </form>
+</div>
+{{end}}
+
+{{define "manifests"}}
+<div id="section-content">
+  <h2>K8s Manifests</h2>
+  <ul>
+    {{- if .Items}}
+      {{- range .Items}}
+      <li style="display:flex; align-items:center; gap:8px; justify-content:space-between">
+        <span style="word-break:break-all">{{.}}</span>
+        <button class="mui-btn" hx-post="/api/sections/manifests/del" hx-vals='{"value":"{{.}}"}' hx-target="#section-content" hx-swap="outerHTML">Delete</button>
+      </li>
+      {{- end}}
+    {{- else}}
+      <li class="meta">No manifest paths yet.</li>
+    {{- end}}
+  </ul>
+  <form class="mui-form" hx-post="/api/sections/manifests/add" hx-target="#section-content" hx-swap="outerHTML">
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+      <input name="value" placeholder="path/to/manifest.yaml" required style="min-width:320px" />
+      <button class="mui-btn mui-btn--primary" type="submit">Add</button>
+    </div>
+  </form>
+</div>
+{{end}}
+
+{{define "scripts"}}
+<div id="section-content">
+  <h2>Startup Scripts</h2>
+  <ul>
+    {{- if .Items}}
+      {{- range .Items}}
+      <li style="display:flex; align-items:center; gap:8px; justify-content:space-between">
+        <span style="word-break:break-all">{{.}}</span>
+        <button class="mui-btn" hx-post="/api/sections/scripts/del" hx-vals='{"value":"{{.}}"}' hx-target="#section-content" hx-swap="outerHTML">Delete</button>
+      </li>
+      {{- end}}
+    {{- else}}
+      <li class="meta">No startup scripts yet.</li>
+    {{- end}}
+  </ul>
+  <form class="mui-form" hx-post="/api/sections/scripts/add" hx-target="#section-content" hx-swap="outerHTML">
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+      <input name="value" placeholder="scripts/setup.sh" required style="min-width:320px" />
+      <button class="mui-btn mui-btn--primary" type="submit">Add</button>
+    </div>
+  </form>
+</div>
+{{end}}
+
+{{define "gitrepos"}}
+<div id="section-content">
+  <h2>Git Repos</h2>
+  <table class="mui-table">
+    <thead><tr><th>Name</th><th>URL</th><th></th></tr></thead>
+    <tbody>
+      {{- if .Items}}
+        {{- range .Items}}
+        <tr>
+          <td>{{.Key}}</td>
+          <td><span style="word-break:break-all">{{.Value}}</span></td>
+          <td>
+            <button class="mui-btn" hx-post="/api/sections/gitrepos/del" hx-vals='{"key":"{{.Key}}"}' hx-target="#section-content" hx-swap="outerHTML">Delete</button>
+          </td>
+        </tr>
+        {{- end}}
+      {{- else}}
+        <tr><td colspan="3" class="meta">No git repos yet.</td></tr>
+      {{- end}}
+    </tbody>
+  </table>
+  <form class="mui-form" hx-post="/api/sections/gitrepos/add" hx-target="#section-content" hx-swap="outerHTML">
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+      <input name="name" placeholder="name" required />
+      <input name="url" placeholder="git@github.com:me/infra.git or https://..." required style="min-width:320px" />
+      <button class="mui-btn mui-btn--primary" type="submit">Add</button>
+    </div>
+  </form>
+</div>
+{{end}}

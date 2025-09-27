@@ -62,6 +62,8 @@ Note: syncToCluster integrates Helm and kubectl to: ensure Helm repos exist, ens
   - Create a new empty Buildfile.yaml if missing
 - editBuildfile
   - Open Buildfile.yaml in your terminal editor (VISUAL/EDITOR respected; falls back to nano)
+- webedit
+  - Launch a local web-based editor (embedded assets, Material UI-like styling, uses htmx). The tool opens your browser pointing to a localhost URL; press Ctrl+C in the terminal to stop the server.
 - addRepo <name> <url>
 - removeRepo <name>
 - addChart <release> <chart>
