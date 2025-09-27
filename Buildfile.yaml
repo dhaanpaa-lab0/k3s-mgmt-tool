@@ -8,5 +8,9 @@ helm_charts:
     step-issuer: step-issuer
     traefik: traefik
     traefik-crd: traefik-crd
-k8s_manifests: []
-startup_scripts: []
+k8s_manifests:
+    - test
+startup_scripts:
+    - test3
+git_repos:
+    sample: https://github.com/example/sample.git

@@ -8,11 +8,22 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// clamp255 ensures the input string is at most 255 Unicode code points.
+// It is rune-safe and leaves shorter strings unchanged.
+func clamp255(s string) string {
+	r := []rune(s)
+	if len(r) > 255 {
+		return string(r[:255])
+	}
+	return s
+}
+
 type SetupFile struct {
 	HelmRepos      map[string]string `yaml:"helm_repos"`
 	HelmCharts     map[string]string `yaml:"helm_charts"` // key: release name, value: chart name
 	Manifests      []string          `yaml:"k8s_manifests"`
 	StartupScripts []string          `yaml:"startup_scripts"`
+	GitRepos       map[string]string `yaml:"git_repos"` // key: repo name, value: git URL this is used for being able to setup initial k8s workspaces
 }
 
 func LoadFromFile() (*SetupFile, error) {
@@ -52,11 +63,19 @@ func (s *SetupFile) EnsureInit() {
 	if s.StartupScripts == nil {
 		s.StartupScripts = []string{}
 	}
+	if s.GitRepos == nil {
+		s.GitRepos = make(map[string]string)
+	}
 }
 
 // AddHelmRepo adds or updates a Helm repository
 func (s *SetupFile) AddHelmRepo(name, url string) {
 	s.EnsureInit()
+	name = clamp255(strings.TrimSpace(name))
+	url = clamp255(strings.TrimSpace(url))
+	if name == "" || url == "" {
+		return
+	}
 	s.HelmRepos[name] = url
 }
 
@@ -73,8 +92,8 @@ func (s *SetupFile) RemoveHelmRepo(name string) bool {
 // AddHelmChart adds or updates a chart mapping for a release. Returns true if added new, false if updated existing with same value.
 func (s *SetupFile) AddHelmChart(release string, chart string) bool {
 	s.EnsureInit()
-	release = strings.TrimSpace(release)
-	chart = strings.TrimSpace(chart)
+	release = clamp255(strings.TrimSpace(release))
+	chart = clamp255(strings.TrimSpace(chart))
 	if release == "" || chart == "" {
 		return false
 	}
@@ -100,7 +119,10 @@ func (s *SetupFile) RemoveHelmChart(release string) bool {
 // AddManifest adds a manifest path if not present
 func (s *SetupFile) AddManifest(path string) bool {
 	s.EnsureInit()
-	path = strings.TrimSpace(path)
+	path = clamp255(strings.TrimSpace(path))
+	if path == "" {
+		return false
+	}
 	for _, p := range s.Manifests {
 		if p == path {
 			return false
@@ -130,7 +152,10 @@ func (s *SetupFile) RemoveManifest(path string) bool {
 // AddStartupScript adds a script path if not present
 func (s *SetupFile) AddStartupScript(path string) bool {
 	s.EnsureInit()
-	path = strings.TrimSpace(path)
+	path = clamp255(strings.TrimSpace(path))
+	if path == "" {
+		return false
+	}
 	for _, p := range s.StartupScripts {
 		if p == path {
 			return false
@@ -175,4 +200,31 @@ func uniqueSorted(in []string) []string {
 	}
 	sort.Strings(out)
 	return out
+}
+
+// AddGitRepo adds or updates a Git repository mapping (name -> URL)
+func (s *SetupFile) AddGitRepo(name, url string) bool {
+	s.EnsureInit()
+	name = clamp255(strings.TrimSpace(name))
+	url = clamp255(strings.TrimSpace(url))
+	if name == "" || url == "" {
+		return false
+	}
+	if existing, ok := s.GitRepos[name]; ok {
+		if existing == url {
+			return false
+		}
+	}
+	s.GitRepos[name] = url
+	return true
+}
+
+// RemoveGitRepo removes a Git repository by name
+func (s *SetupFile) RemoveGitRepo(name string) bool {
+	s.EnsureInit()
+	if _, ok := s.GitRepos[name]; ok {
+		delete(s.GitRepos, name)
+		return true
+	}
+	return false
 }

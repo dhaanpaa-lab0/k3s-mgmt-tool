@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
 
 	"github.com/spf13/cobra"
 	"nexus-sites.net/k3s-mgmt-tool/pkg/buildfile"
@@ -179,6 +181,76 @@ var removeScriptCmd = &cobra.Command{
 	},
 }
 
+// addGitRepoCmd adds or updates a Git repo entry
+var addGitRepoCmd = &cobra.Command{
+	Use:   "addGitRepo <name> <url>",
+	Short: "Add or update a Git repository entry in Buildfile",
+	Args:  cobra.ExactArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		f, err := buildfile.LoadFromFile()
+		if err != nil {
+			fmt.Printf("Error loading K3D Setup File: %s\n", err)
+			return
+		}
+		changed := f.AddGitRepo(args[0], args[1])
+		addCommon(cmd, "Git repository updated.", changed, f.SaveToFile())
+	},
+}
+
+// removeGitRepoCmd removes a Git repo by name
+var removeGitRepoCmd = &cobra.Command{
+	Use:   "removeGitRepo <name>",
+	Short: "Remove a Git repository entry from Buildfile",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		f, err := buildfile.LoadFromFile()
+		if err != nil {
+			fmt.Printf("Error loading K3D Setup File: %s\n", err)
+			return
+		}
+		if f.RemoveGitRepo(args[0]) {
+			if err := f.SaveToFile(); err != nil {
+				fmt.Printf("Error saving K3D Setup File: %s\n", err)
+				return
+			}
+			fmt.Println("Git repository removed.")
+		} else {
+			fmt.Println("Git repository not found; no changes made.")
+		}
+	},
+}
+
+// editBuildfileCmd opens Buildfile.yaml in a full-screen terminal editor
+var editBuildfileCmd = &cobra.Command{
+	Use:   "editBuildfile",
+	Short: "Open Buildfile.yaml in your terminal editor",
+	Run: func(cmd *cobra.Command, args []string) {
+		editor := os.Getenv("VISUAL")
+		if editor == "" {
+			editor = os.Getenv("EDITOR")
+		}
+		if editor == "" {
+			editor = "nano"
+		}
+
+		c := exec.Command(editor, "Buildfile.yaml")
+		c.Stdin = os.Stdin
+		c.Stdout = os.Stdout
+		c.Stderr = os.Stderr
+		if err := c.Run(); err != nil {
+			fmt.Printf("Error launching editor '%s': %v\n", editor, err)
+			return
+		}
+
+		// Validate the YAML after editing
+		if _, err := buildfile.LoadFromFile(); err != nil {
+			fmt.Printf("Warning: Buildfile.yaml contains errors: %v\n", err)
+		} else {
+			fmt.Println("Buildfile.yaml saved and parsed successfully.")
+		}
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(addRepoCmd)
 	rootCmd.AddCommand(removeRepoCmd)
@@ -188,4 +260,7 @@ func init() {
 	rootCmd.AddCommand(removeManifestCmd)
 	rootCmd.AddCommand(addScriptCmd)
 	rootCmd.AddCommand(removeScriptCmd)
+	rootCmd.AddCommand(addGitRepoCmd)
+	rootCmd.AddCommand(removeGitRepoCmd)
+	rootCmd.AddCommand(editBuildfileCmd)
 }
