@@ -1,4 +1,12 @@
 helm_repos:
-  jetstack: https://charts.jetstack.io
-helm_charts: []
+    argo: https://argoproj.github.io/argo-helm
+    external-dns: https://kubernetes-sigs.github.io/external-dns/
+    jetstack: https://charts.jetstack.io
+    smallstep: https://smallstep.github.io/helm-charts
+helm_charts:
+    external-dns-unifi: external-dns
+    step-issuer: step-issuer
+    traefik: traefik
+    traefik-crd: traefik-crd
 k8s_manifests: []
+startup_scripts: []
